@@ -419,7 +419,7 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            addBtn.style.display = 'block';
+            addBtn.style.display = 'inline-block';
 
             addBtn.addEventListener('click', () => {
                 addBtn.style.display = 'none';
