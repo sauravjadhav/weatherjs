@@ -7,6 +7,7 @@
     <title>Enhanced Weather App</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
+    <link rel="manifest" href="/manifest.json">
     <style>
         :root {
             --primary-color: #6200EE;
@@ -212,6 +213,17 @@
             right: 10px;
         }
 
+        .share-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 24px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
         .last-updated {
             font-size: 12px;
             color: var(--on-surface);
@@ -388,6 +400,43 @@
     </div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    }).catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+        let deferredPrompt;
+        const addBtn = document.createElement('button');
+        addBtn.style.display = 'none';
+        addBtn.textContent = 'Add to Home Screen';
+        document.body.appendChild(addBtn);
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            addBtn.style.display = 'block';
+
+            addBtn.addEventListener('click', () => {
+                addBtn.style.display = 'none';
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
+
+
+
         const apiKey = '3795a4a7406d693173e4abec9b759b95';
         let currentUnit = 'metric';
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -496,6 +545,9 @@
             weatherInfo.innerHTML = `
                 <button class="favorite-btn" onclick="toggleFavorite('${data.name}')">
                     <span class="material-icons-round">${favoriteIcon}</span>
+                </button>
+                <button class="share-btn" onclick="shareWeather()">
+                    <span class="material-icons-round">share</span>
                 </button>
                 <img class="weather-icon" src="https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png" alt="${data.weather[0].description}">
                 <h2>${data.name}, ${data.sys.country}</h2>
@@ -640,6 +692,26 @@
                 });
             } catch (error) {
                 console.error('Error fetching city suggestions:', error);
+            }
+        }
+
+        function shareWeather() {
+            const weatherInfo = document.querySelector('.weather-info');
+            const city = weatherInfo.querySelector('h2').textContent;
+            const temperature = weatherInfo.querySelector('.temperature').textContent;
+            const description = weatherInfo.querySelector('.description').textContent;
+            const url = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: `Weather in ${city}`,
+                    text: `The current temperature in ${city} is ${temperature} with ${description}.`,
+                    url: url
+                })
+                    .then(() => console.log('Weather information shared successfully.'))
+                    .catch(error => console.error('Error sharing weather information:', error));
+            } else {
+                alert('Sharing is not supported by your browser.');
             }
         }
 
