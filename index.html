@@ -184,14 +184,17 @@
 
         .unit-toggle {
             background: none;
-            border: none;
-            color: var(--primary-color);
+            border: 2px solid var(--primary-variant);
+            color: var(--primary-variant);
             cursor: pointer;
             font-size: 16px;
             margin-left: 10px;
-            position: absolute;
-            top: 10px;
-            left: 10px;
+            display: inline-flex;
+            justify-content: center;
+        }
+
+        .unit-toggle:hover {
+            color: var(--on-primary);
         }
 
         .favorites {
@@ -232,7 +235,7 @@
             }
 
             .card {
-                padding: 20px 15px;
+                padding: 20px;
             }
 
             .search-container {
@@ -264,6 +267,13 @@
             .favorite-btn {
                 top: 5px;
                 right: 5px;
+                margin: 0;
+            }
+
+            .unit-toggle {
+                top: 5px;
+                left: 5px;
+                margin: 0;
             }
         }
 
@@ -342,6 +352,10 @@
             display: inline-block;
             margin-top: 10px;
         }
+
+        .loading-btn .spinner {
+            border-left-color: #FFFFFF;
+        }
     </style>
 </head>
 
@@ -398,7 +412,7 @@
         function toggleLoadingButton(button, isLoading) {
             if (isLoading) {
                 button.disabled = true;
-                button.innerHTML = '<span class="material-icons-round">search</span> Searching <div class="spinner"></div>';
+                button.innerHTML = '<div class="spinner"></div>';
                 button.classList.add('loading-btn');
             } else {
                 button.disabled = false;
@@ -483,7 +497,6 @@
                 <button class="favorite-btn" onclick="toggleFavorite('${data.name}')">
                     <span class="material-icons-round">${favoriteIcon}</span>
                 </button>
-                <button class="unit-toggle" data-city="${data.name}" onclick="toggleUnit()">${currentUnit === 'metric' ? 'Switch to °F' : 'Switch to °C'}</button>
                 <img class="weather-icon" src="https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png" alt="${data.weather[0].description}">
                 <h2>${data.name}, ${data.sys.country}</h2>
                 <p class="temperature">${Math.round(data.main.temp)}${temperatureUnit}</p>
@@ -496,7 +509,7 @@
                     <div class="weather-detail">
                         <span class="material-icons-round">opacity</span>
                         <span>Humidity: ${data.main.humidity}%</span>
-                    </div>
+                        </div>
                     <div class="weather-detail">
                         <span class="material-icons-round">air</span>
                         <span>Wind: ${data.wind.speed} ${windSpeedUnit}</span>
@@ -504,24 +517,25 @@
                     <div class="weather-detail">
                         <span class="material-icons-round">compress</span>
                         <span>Pressure: ${data.main.pressure} hPa</span>
-                    </div>
-                    <div class="weather-detail">
-                        <span class="material-icons-round">wb_sunny</span>
+                        </div>
+                        <div class="weather-detail">
+                            <span class="material-icons-round">wb_sunny</span>
                         <span>Sunrise: ${sunriseTime}</span>
                     </div>
                     <div class="weather-detail">
                         <span class="material-icons-round">wb_twilight</span>
                         <span>Sunset: ${sunsetTime}</span>
-                    </div>
-                </div>
-                <div class="forecast">
-                    ${getForecastHTML(forecastData)}
-                </div>
-                <div class="air-quality">
-                    <h3>Air Quality</h3>
+                        </div>
+                        </div>
+                        <div class="forecast">
+                            ${getForecastHTML(forecastData)}
+                            </div>
+                            <div class="air-quality">
+                                <h3>Air Quality</h3>
                     <p>AQI: ${airQualityData.list[0].main.aqi} (${getAQIDescription(airQualityData.list[0].main.aqi)})</p>
-                </div>
+                    </div>
                 <p class="last-updated">Last updated: ${new Date().toLocaleString()}</p>
+                <button class="unit-toggle" data-city="${data.name}" onclick="toggleUnit()">${currentUnit === 'metric' ? 'Switch to °F' : 'Switch to °C'}</button>
             `;
             weatherInfo.classList.add('fade-in-up');
         }
@@ -557,7 +571,10 @@
                 favorites.splice(index, 1);
             }
             localStorage.setItem('favorites', JSON.stringify(favorites));
+            const city = document.querySelector('.weather-info h2').textContent.split(',')[0];
+            document.getElementById('search').value = city;
             updateFavorites();
+            getWeather();
         }
 
         function updateFavorites() {
